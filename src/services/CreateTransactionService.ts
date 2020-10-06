@@ -15,19 +15,14 @@ class CreateTransactionService {
   }
 
   public execute({title, value, type}: Request): Transaction {
-    const balance = this.transactionsRepository.getBalance();
-
-    if(type == 'income'){
-      balance.income += value;
-    }
-    else {
-      balance.outcome += value;
+    if(!["income", "outcome"].includes(type)){
+      throw new Error('Transction type is invalid')
     }
 
-    balance.total = balance.income - balance.outcome;
-    
-    if(balance.total < 0){
-      throw new Error('Balance extrapolado!')
+    const { total } = this.transactionsRepository.getBalance();
+
+    if(type == "outcome" && total < value){
+      throw new Error('You do not have enough balance')
     }
 
     const transaction = this.transactionsRepository.create({
